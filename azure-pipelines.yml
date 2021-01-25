@@ -2,6 +2,7 @@ trigger:
 - 'master'
 
 variables:
+  containerRegistry: 'My Hub'
   buildConfiguration: 'Release'
   leaderboardRepository: 'leaderboard'
   webRepository: 'web'
@@ -18,29 +19,37 @@ stages:
       vmImage: 'ubuntu-18.04'
     steps:
     - task: Docker@2
-      displayName: 'Build and push the image to container registry'
+      displayName: 'Web docker'
       inputs:
-        command: buildAndPush
-        buildContext: $(Build.Repository.LocalPath)
-        repository: $(webRepository)
+        containerRegistry: $(containerRegistry)
+        repository: '$(webRepository)'
+        command: 'buildAndPush'
         dockerfile: '$(Build.SourcesDirectory)/Tailspin.SpaceGame.Web/Dockerfile'
-        containerRegistry: 'Container Registry Connection'
-        tags: |
-          $(tag)
-
+        buildContext: '$(Build.Repository.LocalPath)'
+        tags: '$(tag)'
+    - task: Docker@2
+      displayName: 'Leaderboard docker'
+      inputs:
+        containerRegistry: $(containerRegistry)
+        repository: '$(leaderboardRepository)'
+        command: 'buildAndPush'
+        dockerfile: '$(Build.SourcesDirectory)/Tailspin.SpaceGame.LeaderboardContainer/Dockerfile'
+        buildContext: '$(Build.Repository.LocalPath)'
+        tags: '$(tag)'
+    - publish: '$(Build.SourcesDirectory)/manifests'
+      artifact: manifests
 - stage: 'Deploy'
-  displayName: 'Deploy the container'
+  displayName: 'Deploy the containers'
   dependsOn: Build
   jobs:
-  - job: 'Deploy'
-    displayName: 'Deploy job'
+  - deployment: Deploy
+    displayName: Deploy
     pool:
       vmImage: 'ubuntu-18.04'
+    environment: 'AKS.space-game'
     variables:
     - group: Release
-    steps:
-    - task: AzureWebAppContainer@1
-      inputs:
-       appName: $(WebAppName)
-       azureSubscription: 'Resource Manager - Tailspin - Space Game'
-       imageName: $(RegistryName)/$(webRepository):$(build.buildId)
+    strategy:
+      runOnce:
+        deploy:
+          steps:
