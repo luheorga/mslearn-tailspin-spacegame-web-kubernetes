@@ -21,23 +21,25 @@ stages:
     - task: Docker@2
       displayName: 'Web docker'
       inputs:
-        containerRegistry: $(containerRegistry)
+        containerRegistry: '$(containerRegistry)'
         repository: '$(webRepository)'
         command: 'buildAndPush'
-        dockerfile: '$(Build.SourcesDirectory)/Tailspin.SpaceGame.Web/Dockerfile'
+        Dockerfile: '**/Dockerfile'
         buildContext: '$(Build.Repository.LocalPath)'
         tags: |
           $(tag)
+          latest
     - task: Docker@2
       displayName: 'Leaderboard docker'
       inputs:
-        containerRegistry: $(containerRegistry)
+        containerRegistry: '$(containerRegistry)'
         repository: '$(leaderboardRepository)'
         command: 'buildAndPush'
-        dockerfile: '$(Build.SourcesDirectory)/Tailspin.SpaceGame.LeaderboardContainer/Dockerfile'
+        Dockerfile: '**/Dockerfile'
         buildContext: '$(Build.Repository.LocalPath)'
         tags: |
           $(tag)
+          latest
     - publish: '$(Build.SourcesDirectory)/manifests'
       artifact: manifests
 - stage: 'Deploy'
