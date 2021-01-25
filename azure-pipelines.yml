@@ -4,8 +4,8 @@ trigger:
 variables:
   containerRegistry: 'My Hub'
   buildConfiguration: 'Release'
-  leaderboardRepository: 'leaderboard'
-  webRepository: 'web'
+  leaderboardRepository: 'luheorga/leaderboard'
+  webRepository: 'luheorga/web'
   tag: '$(Build.BuildId)'
   imagePullSecret: 'secret'
 
